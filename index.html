@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gộp ảnh AnanasUX</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #FFFFFF;
+    }
+
+    .image-preview {
+      width: 100px;
+      /* Thay đổi kích thước ảnh cho thư viện */
+      height: 100px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .image-preview:hover {
+      transform: scale(1.05);
+      border-color: #007bff;
+    }
+
+    #mergedCanvas {
+      display: none !important;
+    }
+
+    .modal-body {
+      text-align: center;
+    }
+
+    #mergedPreview {
+      display: none;
+      width: 200px;
+      height: 200px;
+      margin-top: 20px;
+      max-width: 100%;
+      height: auto;
+      transition: filter 0.3s ease;
+    }
+
+    #mergedPreview:hover {
+      filter: brightness(1.05);
+    }
+
+    .modal-download-button {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    #cropperModal .modal-dialog {
+      width: 500px;
+      /* Đảm bảo chiều rộng cố định */
+      height: 500px;
+      /* Đảm bảo chiều cao cố định, giúp tạo khung vuông */
+      max-width: 90vw;
+      /* Đảm bảo phù hợp với kích thước màn hình */
+      max-height: 90vh;
+      /* Đảm bảo phù hợp với kích thước màn hình */
+      margin: auto;
+      /* Canh giữa modal */
+    }
+
+    #cropperModal .cropper-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #cropperModal .modal-body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+      height: 100%;
+      /* Đảm bảo container bên trong chiếm đủ chiều cao */
+    }
+
+
+    .cropper-container {
+      max-height: 500px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .image-preview {
+        height: 100px;
+        width: 100px;
+      }
+
+      .cropper-container {
+        max-height: 300px;
+        /* Điều chỉnh cho màn hình nhỏ */
+      }
+
+      .cropper-container img {
+        max-width: 100%;
+        max-height: 300px;
+        /* Điều chỉnh chiều cao cho màn hình nhỏ */
+      }
+    }
+
+    .cropper-container {
+      width: 100% !important;
+      max-height: 500px;
+      overflow: hidden;
+    }
+
+    .cropper-container img {
+      width: auto !important;
+      height: auto !important;
+      max-height: auto;
+    }
+
+    /* Modal for enlarged image */
+    .modal-enlarged-image img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .modal-footer button {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container mt-5">
+    <h2>Tải ảnh cần gộp</h2>
+    <form id="imageForm">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="formFile1" class="form-label">Chọn ảnh 1</label>
+          <input class="form-control" type="file" id="formFile1" accept="image/*"
+            onchange="previewImage(event, 'preview1')">
+          <div class="mt-2">
+            <label class="form-label">Hoặc chọn ảnh từ thư viện</label>
+            <div id="libraryImages" class="d-flex flex-wrap">
+              <div class="position-relative me-3">
+                <input type="checkbox" id="libraryImage1" class="position-absolute" style="opacity: 0; cursor: pointer;"
+                  onclick="selectLibraryImage(this, 'preview1')">
+                <img src="images/Anhsinhnhat1.png" class="image-preview" alt="Ảnh sinh nhật mẫu 1"
+                  onclick="toggleCheckbox(this, 'libraryImage1')">
+              </div>
+              <div class="position-relative me-3">
+                <input type="checkbox" id="libraryImage2" class="position-absolute" style="opacity: 0; cursor: pointer;"
+                  onclick="selectLibraryImage(this, 'preview1')">
+                <img src="images/Anhsinhnhat2.png" class="image-preview" alt="Ảnh sinh nhật mẫu 2"
+                  onclick="toggleCheckbox(this, 'libraryImage2')">
+              </div>
+              <div class="position-relative me-3">
+                <input type="checkbox" id="libraryImage3" class="position-absolute" style="opacity: 0; cursor: pointer;"
+                  onclick="selectLibraryImage(this, 'preview1')">
+                <img src="images/Anhsinhnhat3.png" class="image-preview" alt="Ảnh sinh nhật mẫu 3"
+                  onclick="toggleCheckbox(this, 'libraryImage3')">
+              </div>
+              <div class="position-relative me-3">
+                <input type="checkbox" id="libraryImage4" class="position-absolute" style="opacity: 0; cursor: pointer;"
+                  onclick="selectLibraryImage(this, 'preview1')">
+                <img src="images/Anhsinhnhat4.png" class="image-preview" alt="Ảnh sinh nhật mẫu 4"
+                  onclick="toggleCheckbox(this, 'libraryImage4')">
+              </div>
+            </div>
+          </div>
+          <img id="preview1" class="image-preview" src="#" alt="Image Preview 1" onclick="openModal(this)">
+        </div>
+        <div class="col-md-6">
+          <label for="formFile2" class="form-label">Chọn ảnh 2</label>
+          <input class="form-control" type="file" id="formFile2" accept="image/*" onchange="loadCropper(event)">
+          <img id="preview2" class="image-preview" src="#" alt="Image Preview 2" onclick="openModal(this)">
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" onclick="mergeImages()">Gộp ảnh</button>
+    </form>
+    <canvas id="mergedCanvas"></canvas>
+
+    <h4 class="mt-4">Xem trước ảnh đã gộp:</h4>
+    <div class="position-relative">
+      <img id="mergedPreview" class="image-preview" src="#" alt="Merged Image Preview"
+        onclick="openEnlargedModal(this)">
+      <button id="downloadMergedButton" class="btn btn-success mt-2 position-absolute"
+        style="display: none; top: 210px; left: 10px;" onclick="downloadMergedImage()">Tải ảnh về</button>
+    </div>
+  </div>
+
+  <!-- Modal for cropping -->
+  <div class="modal fade" id="cropperModal" tabindex="-1" aria-labelledby="cropperModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cropperModalLabel">Cắt ảnh</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="rotateImage(-90)">Xoay trái 90°</button>
+          <button type="button" class="btn btn-primary" onclick="rotateImage(90)">Xoay phải 90°</button>
+          <button type="button" class="btn btn-secondary" onclick="flipImage('horizontal')">Lật ngang</button>
+          <button type="button" class="btn btn-secondary" onclick="flipImage('vertical')">Lật dọc</button>
+          <button type="button" class="btn btn-success" onclick="confirmCrop()">Xác nhận cắt</button>
+        </div>
+        <div class="modal-body">
+          <div class="cropper-container">
+            <img id="imageToCrop" src="#" alt="Image to Crop" style="width: 100%;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="confirmCrop()">Xác nhận cắt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for enlarged merged image -->
+  <div class="modal fade" id="enlargedModal" tabindex="-1" aria-labelledby="enlargedModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-enlarged-image">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="enlargedModalLabel">Ảnh gộp phóng to</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <img id="enlargedImage" src="#" alt="Enlarged Merged Image">
+          <button id="enlargedDownloadButton" class="btn btn-success mt-2" style="display: none;"
+            onclick="downloadMergedImage()">Tải ảnh về</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="loadingSpinner" class="loading-spinner"></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <script>
+    let cropper;
+
+    function loadCropper(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function () {
+        const imageToCrop = document.getElementById('imageToCrop');
+        imageToCrop.src = reader.result;
+        const modal = new bootstrap.Modal(document.getElementById('cropperModal'));
+        modal.show();
+
+        if (cropper) {
+          cropper.destroy();
+        }
+
+        cropper = new Cropper(imageToCrop, {
+          aspectRatio: 1, // Tỷ lệ hình vuông mặc định
+          viewMode: 1, // Không cắt ra ngoài khung
+          autoCropArea: 1.0, // Khung cắt mở rộng toàn bộ
+          responsive: true,
+          background: true,
+          movable: true,
+          zoomable: true,
+          scalable: true,
+          rotatable: true, // Cho phép xoay ảnh
+          toggleDragModeOnDblclick: false // Vô hiệu hóa chuyển chế độ bằng cách nhấp đúp
+        });
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function confirmCrop() {
+      const canvas = cropper.getCroppedCanvas();
+      const croppedImage = canvas.toDataURL('image/png');
+      document.getElementById('preview2').src = croppedImage;
+      document.getElementById('preview2').style.display = 'block';
+
+      const modal = bootstrap.Modal.getInstance(document.getElementById('cropperModal'));
+      modal.hide();
+    }
+
+    function previewImage(event, previewId) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function () {
+        const preview = document.getElementById(previewId);
+        preview.src = reader.result;
+        preview.style.display = 'block';
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function toggleCheckbox(imageElement, checkboxId) {
+      const checkbox = document.getElementById(checkboxId);
+      checkbox.checked = !checkbox.checked;
+
+      if (checkbox.checked) {
+        selectLibraryImage(checkbox, 'preview1');
+      } else {
+        const preview = document.getElementById('preview1');
+        if (preview.src === imageElement.src) {
+          preview.src = '';
+          preview.style.display = 'none';
+        }
+      }
+    }
+
+    function selectLibraryImage(checkbox, previewId) {
+      const preview = document.getElementById(previewId);
+      if (checkbox.checked) {
+        preview.src = checkbox.parentNode.querySelector('img').src;
+        preview.style.display = 'block';
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    }
+
+    function mergeImages() {
+      const img1 = document.getElementById('preview1');
+      const img2 = document.getElementById('preview2');
+
+      if (!img1.src || !img2.src) {
+        alert('Please upload both images.');
+        return;
+      }
+
+      // Hiển thị spinner và ẩn canvas trong khi xử lý
+      const spinner = document.getElementById('loadingSpinner');
+      const mergedPreview = document.getElementById('mergedPreview');
+      spinner.style.display = 'block';
+      mergedPreview.classList.add('hide-during-load');
+
+      const canvas = document.getElementById('mergedCanvas');
+      const context = canvas.getContext('2d');
+      context.filter = 'none';
+      canvas.width = 1028;
+      canvas.height = 1028;
+      context.fillStyle = '#FFFFFF';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      const image2 = new Image();
+      image2.crossOrigin = "anonymous";
+      image2.onload = function () {
+        drawImageOptimized(context, image2, 2);
+
+        const image1 = new Image();
+        image1.crossOrigin = "anonymous";
+        image1.onload = function () {
+          drawImageOptimized(context, image1, 1);
+
+          // Sau khi gộp ảnh, ẩn spinner và hiển thị preview
+          mergedPreview.src = canvas.toDataURL('image/png');
+          mergedPreview.style.display = 'block';
+          document.getElementById('downloadMergedButton').style.display = 'block';
+
+          // Ẩn spinner và hiển thị canvas
+          spinner.style.display = 'none';
+          mergedPreview.classList.remove('hide-during-load');
+        };
+        image1.src = img1.src;
+      };
+      image2.src = img2.src;
+    }
+
+
+    function drawImageOptimized(context, img, layer) {
+      const scale = Math.min(context.canvas.width / img.width, context.canvas.height / img.height);
+      const x = (context.canvas.width / 2) - (img.width / 2) * scale;
+      const y = (context.canvas.height / 2) - (img.height / 2) * scale;
+      context.filter = 'none';
+      context.drawImage(img, x, y, img.width * scale, img.height * scale);
+      if (layer === 1) {
+        context.drawImage(img, x, y, img.width * scale, img.height * scale);
+      }
+    }
+
+    function downloadMergedImage() {
+      const mergedPreview = document.getElementById('mergedPreview');
+      const link = document.createElement('a');
+      link.href = mergedPreview.src;
+      link.download = 'merged-image.png';
+      link.click();
+    }
+
+    function openEnlargedModal(imageElement) {
+      const modal = new bootstrap.Modal(document.getElementById('enlargedModal'));
+      const enlargedImage = document.getElementById('enlargedImage');
+      enlargedImage.src = imageElement.src;
+
+      const enlargedDownloadButton = document.getElementById('enlargedDownloadButton');
+      enlargedDownloadButton.style.display = 'block';
+
+      modal.show();
+    }
+    function rotateImage(degree) {
+      if (cropper) {
+        cropper.rotate(degree);
+      }
+    }
+
+    function flipImage(direction) {
+      if (cropper) {
+        const scaleX = direction === 'horizontal' ? -cropper.getData().scaleX || -1 : cropper.getData().scaleX || 1;
+        const scaleY = direction === 'vertical' ? -cropper.getData().scaleY || -1 : cropper.getData().scaleY || 1;
+        cropper.scale(scaleX, scaleY);
+      }
+    }
+
+  </script>
+
+</body>
+
+</html>
